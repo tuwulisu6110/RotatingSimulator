@@ -1,5 +1,6 @@
 package com.example.rotatingsimulator;
 
+import kernel.Kernel;
 import android.R.string;
 import android.os.Bundle;
 import android.app.Activity;
@@ -19,6 +20,7 @@ public class MainActivity extends Activity// implements OnTouchListener
 	RelativeLayout.LayoutParams params;
 	RelativeLayout mainView;
 	ImageView iv;
+	Kernel kernel;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
@@ -32,6 +34,7 @@ public class MainActivity extends Activity// implements OnTouchListener
 		params.setMargins(100, 100, 0, 0);
 		iv.setLayoutParams(params);
 		mainView.addView(iv);
+		kernel = new Kernel(this,mainView);
 		//mainView.setOnTouchListener(this);
 		testPrintOut.setText("start");
 		
