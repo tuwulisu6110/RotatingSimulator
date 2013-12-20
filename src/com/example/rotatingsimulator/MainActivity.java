@@ -1,5 +1,6 @@
 package com.example.rotatingsimulator;
 
+import kernel.Ball;
 import kernel.Kernel;
 import android.R.string;
 import android.os.Bundle;
@@ -21,6 +22,8 @@ public class MainActivity extends Activity// implements OnTouchListener
 	RelativeLayout mainView;
 	ImageView iv;
 	Kernel kernel;
+	private ImageView chestImageView[][];
+	private RelativeLayout.LayoutParams chestParams[][];
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
@@ -37,7 +40,7 @@ public class MainActivity extends Activity// implements OnTouchListener
 		kernel = new Kernel(this,mainView);
 		//mainView.setOnTouchListener(this);
 		testPrintOut.setText("start");
-		
+		createChest();
 	}
 
 	@Override
@@ -59,6 +62,45 @@ public class MainActivity extends Activity// implements OnTouchListener
 		//iv.setPadding(x, y, 0, 0);
 		//mainView.updateViewLayout(iv, params);
 		return true;
+	}
+	private void createChest()
+	{
+		int h=kernel.getChestHeight(),w=kernel.getChestWidth();
+		chestImageView = new ImageView[h][w];
+		chestParams = new RelativeLayout.LayoutParams[h][w];
+		for(int i=0;i<kernel.getChestHeight();i++)
+			for(int j=0;j<kernel.getChestWidth();j++)
+			{
+				chestImageView[i][j] = new ImageView(this);
+				chestParams[i][j] = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+				int type = kernel.getTypeByIndex(j, i);
+				switch(type)
+				{
+				case Ball.FIRE:
+					chestImageView[i][j].setImageResource(R.drawable.fire);
+					break;
+				case Ball.WATER:
+					chestImageView[i][j].setImageResource(R.drawable.water);
+					break;
+				case Ball.GRASS:
+					chestImageView[i][j].setImageResource(R.drawable.grass);
+					break;
+				case Ball.LIGHT:
+					chestImageView[i][j].setImageResource(R.drawable.light);
+					break;
+				case Ball.DARK:
+					chestImageView[i][j].setImageResource(R.drawable.dark);
+					break;
+				case Ball.HEART:
+					chestImageView[i][j].setImageResource(R.drawable.heart);
+					break;
+				}
+				chestParams[i][j].width = 50;
+				chestParams[i][j].height = 50;
+				chestParams[i][j].setMargins(50*j, 50*i, 0, 0);
+				chestImageView[i][j].setLayoutParams(chestParams[i][j]);
+				mainView.addView(chestImageView[i][j]);
+			}
 	}
 	/*@Override
 	public boolean onTouch(View v, MotionEvent event) 

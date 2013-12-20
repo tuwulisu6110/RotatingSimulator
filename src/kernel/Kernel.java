@@ -8,28 +8,28 @@ import android.widget.RelativeLayout;
 public class Kernel 
 {
 	private Ball chest[][];
+	private int chestWidth;
+	private int chestHeight;
 	public Kernel(Context context,RelativeLayout mainView) 
 	{
-		// TODO Auto-generated constructor stub
-		chest = new Ball[5][6];
+		chestWidth = 6;
+		chestHeight = 5;
+		chest = new Ball[chestHeight][chestWidth];
 		for(int i=0;i<5;i++)
 			for(int j=0;j<6;j++)
-				chest[i][j] = new Ball((int)(Math.random()*6),context); 
-		initView(mainView);
+				chest[i][j] = new Ball((int)(Math.random()*6)); 
 	}
-	private void initView(RelativeLayout mainView)
+	public int getTypeByIndex(int x,int y)
 	{
-		int width = mainView.getWidth() , height = mainView.getHeight();
-		for(int i=0;i<5;i++)
-			for(int j=0;j<6;j++)
-			{
-				RelativeLayout.LayoutParams params = chest[i][j].getLayoutParams();
-				params.height=50;
-				params.width=50;
-				params.setMargins(50*j, 50*i, 0, 0);
-				chest[i][j].getImageView().setLayoutParams(params);
-				mainView.addView(chest[i][j].getImageView());
-			}
+		return chest[y][x].getType();
+	}
+	public int getChestHeight()
+	{
+		return chestHeight;
+	}
+	public int getChestWidth()
+	{
+		return chestWidth;
 	}
 
 }
