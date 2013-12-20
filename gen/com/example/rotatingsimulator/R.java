@@ -11,6 +11,7 @@ public final class R {
     public static final class attr {
     }
     public static final class dimen {
+        public static final int FULL=0x7f040002;
         /**  Default screen margins, per the Android Design guidelines. 
 
          Customize dimensions originally defined in res/values/dimens.xml (such as

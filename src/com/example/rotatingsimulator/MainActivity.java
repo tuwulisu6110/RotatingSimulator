@@ -5,7 +5,10 @@ import kernel.Kernel;
 import android.R.string;
 import android.os.Bundle;
 import android.app.Activity;
+import android.graphics.Point;
 import android.text.style.UpdateLayout;
+import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
@@ -13,6 +16,8 @@ import android.view.View.OnTouchListener;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 
 public class MainActivity extends Activity// implements OnTouchListener
@@ -23,7 +28,7 @@ public class MainActivity extends Activity// implements OnTouchListener
 	ImageView iv;
 	Kernel kernel;
 	private ImageView chestImageView[][];
-	private RelativeLayout.LayoutParams chestParams[][];
+	private TableRow.LayoutParams ballParams[][];
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
@@ -63,16 +68,31 @@ public class MainActivity extends Activity// implements OnTouchListener
 		//mainView.updateViewLayout(iv, params);
 		return true;
 	}
+	
 	private void createChest()
 	{
+		Display display = getWindowManager().getDefaultDisplay();
+		Point screenSize = new Point();
+		display.getSize(screenSize);
 		int h=kernel.getChestHeight(),w=kernel.getChestWidth();
+		TableLayout chestLayout = new TableLayout(this);
+		TableRow.LayoutParams chestParams = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT);
+		chestParams.setMargins(0, 300, 0, 0);
+		chestLayout.setLayoutParams(chestParams);
+		chestLayout.setStretchAllColumns(true);
+		TableRow row[] = new TableRow[h];
 		chestImageView = new ImageView[h][w];
-		chestParams = new RelativeLayout.LayoutParams[h][w];
+		ballParams = new TableRow.LayoutParams[h][w];
 		for(int i=0;i<kernel.getChestHeight();i++)
+		{
+			row[i] = new TableRow(this);
 			for(int j=0;j<kernel.getChestWidth();j++)
 			{
 				chestImageView[i][j] = new ImageView(this);
-				chestParams[i][j] = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+				if(j==kernel.getChestWidth()-1)
+					ballParams[i][j] = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT,android.view.Gravity.RIGHT);
+				else
+					ballParams[i][j] = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT);
 				int type = kernel.getTypeByIndex(j, i);
 				switch(type)
 				{
@@ -95,12 +115,14 @@ public class MainActivity extends Activity// implements OnTouchListener
 					chestImageView[i][j].setImageResource(R.drawable.heart);
 					break;
 				}
-				chestParams[i][j].width = 50;
-				chestParams[i][j].height = 50;
-				chestParams[i][j].setMargins(50*j, 50*i, 0, 0);
-				chestImageView[i][j].setLayoutParams(chestParams[i][j]);
-				mainView.addView(chestImageView[i][j]);
+				ballParams[i][j].width = screenSize.x/6;
+				ballParams[i][j].height = screenSize.x/6;
+				chestImageView[i][j].setLayoutParams(ballParams[i][j]);
+				row[i].addView(chestImageView[i][j]);
 			}
+			chestLayout.addView(row[i]);
+		}
+		mainView.addView(chestLayout);
 	}
 	/*@Override
 	public boolean onTouch(View v, MotionEvent event) 
