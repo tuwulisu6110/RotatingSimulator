@@ -17,10 +17,9 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 
-public class MainActivity extends Activity// implements OnTouchListener
+public class MainActivity extends Activity implements OnTouchListener
 {
 	TextView testPrintOut;
 	RelativeLayout.LayoutParams params;
@@ -28,11 +27,19 @@ public class MainActivity extends Activity// implements OnTouchListener
 	ImageView iv;
 	Kernel kernel;
 	private ImageView chestImageView[][];
-	private TableRow.LayoutParams ballParams[][];
+	private RelativeLayout.LayoutParams ballParams[][];
+	private Point chestDimension;
+	private boolean controlABall;
+	private Point controlBallId;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
 		super.onCreate(savedInstanceState);
+		
+		//data setting
+		chestDimension = new Point(6,5);
+		//data setting end
+		
 		setContentView(R.layout.activity_main);
 		testPrintOut = (TextView) findViewById(R.id.testPrintOut);
 		mainView = (RelativeLayout)findViewById(R.id.mainView);
@@ -41,58 +48,53 @@ public class MainActivity extends Activity// implements OnTouchListener
 		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 		params.setMargins(100, 100, 0, 0);
 		iv.setLayoutParams(params);
-		mainView.addView(iv);
-		kernel = new Kernel(this,mainView);
-		//mainView.setOnTouchListener(this);
+		//mainView.addView(iv);
+		kernel = new Kernel(chestDimension);
+		mainView.setOnTouchListener(this);
 		testPrintOut.setText("start");
 		createChest();
-	}
+		controlBallId = new Point();
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) 
-	{
-		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
-		return true;
+		
 	}
-	
-	@Override
-	public boolean onTouchEvent(MotionEvent e)
+	/*public void sbPressed()//some ball be pressed, called by ImageView i think
 	{
-		String s=String.valueOf(e.getX())+" "+String.valueOf(e.getY());
-		testPrintOut.setText(s);
-		int x=(int)e.getX(),y=(int)e.getY();
-		params.leftMargin=x;
-		params.topMargin=y;
-		//iv.setPadding(x, y, 0, 0);
-		//mainView.updateViewLayout(iv, params);
-		return true;
+		boolean multitouchCheck = false;
+		for(int i=0;i<kernel.getChestHeight();i++)
+			for(int j=0;j<kernel.getChestWidth();j++)
+			{
+				if(chestImageView[i][j].isPressed())
+				{
+					multitouchCheck = true;
+					chestImageView[i][j].setPress(false);
+					Log.d("ball",String.valueOf(j)+" "+String.valueOf(i));
+					testPrintOut.setText(String.valueOf(j)+" "+String.valueOf(i));
+				}
+			}
 	}
-	
+	public void resetAllPress()
+	{
+		for(int i=0;i<kernel.getChestHeight();i++)
+			for(int j=0;j<kernel.getChestWidth();j++)
+			{
+				chestImageView[i][j].setPress(false);
+			}
+	}*/
 	private void createChest()
 	{
 		Display display = getWindowManager().getDefaultDisplay();
 		Point screenSize = new Point();
 		display.getSize(screenSize);
 		int h=kernel.getChestHeight(),w=kernel.getChestWidth();
-		TableLayout chestLayout = new TableLayout(this);
-		TableRow.LayoutParams chestParams = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT);
-		chestParams.setMargins(0, 300, 0, 0);
-		chestLayout.setLayoutParams(chestParams);
-		chestLayout.setStretchAllColumns(true);
-		TableRow row[] = new TableRow[h];
 		chestImageView = new ImageView[h][w];
-		ballParams = new TableRow.LayoutParams[h][w];
+		ballParams = new RelativeLayout.LayoutParams[h][w];
 		for(int i=0;i<kernel.getChestHeight();i++)
 		{
-			row[i] = new TableRow(this);
 			for(int j=0;j<kernel.getChestWidth();j++)
 			{
 				chestImageView[i][j] = new ImageView(this);
-				if(j==kernel.getChestWidth()-1)
-					ballParams[i][j] = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT,android.view.Gravity.RIGHT);
-				else
-					ballParams[i][j] = new TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT, TableRow.LayoutParams.WRAP_CONTENT);
+				ballParams[i][j] = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
+
 				int type = kernel.getTypeByIndex(j, i);
 				switch(type)
 				{
@@ -115,27 +117,57 @@ public class MainActivity extends Activity// implements OnTouchListener
 					chestImageView[i][j].setImageResource(R.drawable.heart);
 					break;
 				}
+				
 				ballParams[i][j].width = screenSize.x/6;
 				ballParams[i][j].height = screenSize.x/6;
+				ballParams[i][j].setMargins(ballParams[i][j].width*j, ballParams[i][j].height*i, 0, 0);
 				chestImageView[i][j].setLayoutParams(ballParams[i][j]);
-				row[i].addView(chestImageView[i][j]);
+				mainView.addView(chestImageView[i][j]);
+				
 			}
-			chestLayout.addView(row[i]);
 		}
-		mainView.addView(chestLayout);
 	}
-	/*@Override
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) 
+	{
+		// Inflate the menu; this adds items to the action bar if it is present.
+		getMenuInflater().inflate(R.menu.main, menu);
+		return true;
+	}
+	
+	
+	@Override
 	public boolean onTouch(View v, MotionEvent event) 
 	{
 		// TODO Auto-generated method stub
 		String s=String.valueOf(event.getX())+" "+String.valueOf(event.getY());
-		testPrintOut.setText(s);
+		//testPrintOut.setText(s);
+		Log.d("mainview",s);
 		int x=(int)event.getX(),y=(int)event.getY();
-		//params.setMargins(x, y, 0, 0);
-		iv.setPadding(x, y, 0, 0);
-		//mainView.updateViewLayout(iv, params);
+		params.setMargins(x-40, y-40, 0, 0);
+		//iv.setPadding(x, y, 0, 0);
 		
-		return false;
-	}*/
+		controlABall = false;
+		for(int i=0;i<kernel.getChestHeight();i++)
+			for(int j=0;j<kernel.getChestWidth();j++)
+			{
+				//Log.d("pos",String.valueOf(chestImageView[i][j].getHeight()));
+				if(x>chestImageView[i][j].getLeft()&&x<chestImageView[i][j].getLeft()+chestImageView[i][j].getWidth())
+					if(y>chestImageView[i][j].getTop()&&y<chestImageView[i][j].getTop()+chestImageView[i][j].getHeight())
+					{
+						testPrintOut.setText(String.valueOf(j)+" "+String.valueOf(i));
+						controlABall = true;
+						if(event.getAction() == MotionEvent.ACTION_DOWN)
+						{
+							controlBallId.x = j;
+							controlBallId.y = i;
+						}
+					}
+			}
+		if(event.getAction() == MotionEvent.ACTION_MOVE)
+			mainView.updateViewLayout(chestImageView[controlBallId.y][controlBallId.x], params);
+		return true;
+	}
 
 }
