@@ -152,7 +152,7 @@ public class MainActivity extends Activity implements OnTouchListener
 						}
 						if(event.getAction() == MotionEvent.ACTION_MOVE)
 						{
-							if(i!=previousBallId.y&&j!=previousBallId.x)
+							if(i!=previousBallId.y||j!=previousBallId.x)
 							{
 								kernel.exchange(new Point(j,i), previousBallId);
 								chestImageView[i][j].setImageResource(R.drawable.white);
