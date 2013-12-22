@@ -28,4 +28,10 @@ public class Ball
 	{
 		return type;
 	}
+	public void exchange(Ball aite)
+	{
+		int buffer = type;
+		type = aite.getType();
+		aite.setType(buffer);
+	}
 }

@@ -5,6 +5,7 @@ import java.util.Random;
 import android.content.Context;
 import android.graphics.Point;
 import android.widget.RelativeLayout;
+import junit.framework.Assert;
 
 public class Kernel 
 {
@@ -31,6 +32,12 @@ public class Kernel
 	public int getChestWidth()
 	{
 		return chestWidth;
+	}
+	public void exchange(Point a,Point b)
+	{
+		Assert.assertTrue(a.toString(),a.x>=0&&a.x<chestWidth&&a.y>=0&&a.y<chestHeight);
+		Assert.assertTrue(b.toString(),b.x>=0&&b.x<chestWidth&&b.y>=0&&b.y<chestHeight);
+		chest[a.y][a.x].exchange(chest[b.y][b.x]);
 	}
 
 }

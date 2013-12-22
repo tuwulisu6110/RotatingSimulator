@@ -1,5 +1,6 @@
 package com.example.rotatingsimulator;
 
+import junit.framework.Assert;
 import kernel.Ball;
 import kernel.Kernel;
 import android.R.string;
@@ -24,13 +25,14 @@ public class MainActivity extends Activity implements OnTouchListener
 	TextView testPrintOut;
 	RelativeLayout.LayoutParams params;
 	RelativeLayout mainView;
-	ImageView iv;
 	Kernel kernel;
 	private ImageView chestImageView[][];
+	private ImageView roamingBallView;
 	private RelativeLayout.LayoutParams ballParams[][];
 	private Point chestDimension;
 	private boolean controlABall;
 	private Point controlBallId;
+	private Point previousBallId;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
@@ -43,43 +45,37 @@ public class MainActivity extends Activity implements OnTouchListener
 		setContentView(R.layout.activity_main);
 		testPrintOut = (TextView) findViewById(R.id.testPrintOut);
 		mainView = (RelativeLayout)findViewById(R.id.mainView);
-		iv = new ImageView(this);
-		iv.setImageResource(R.drawable.ic_launcher);
 		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		params.setMargins(100, 100, 0, 0);
-		iv.setLayoutParams(params);
 		//mainView.addView(iv);
 		kernel = new Kernel(chestDimension);
 		mainView.setOnTouchListener(this);
 		testPrintOut.setText("start");
 		createChest();
 		controlBallId = new Point();
-
+		previousBallId = new Point();
+		roamingBallView = new ImageView(this);
 		
 	}
-	/*public void sbPressed()//some ball be pressed, called by ImageView i think
+	private int typeRefImage(int type)
 	{
-		boolean multitouchCheck = false;
-		for(int i=0;i<kernel.getChestHeight();i++)
-			for(int j=0;j<kernel.getChestWidth();j++)
-			{
-				if(chestImageView[i][j].isPressed())
-				{
-					multitouchCheck = true;
-					chestImageView[i][j].setPress(false);
-					Log.d("ball",String.valueOf(j)+" "+String.valueOf(i));
-					testPrintOut.setText(String.valueOf(j)+" "+String.valueOf(i));
-				}
-			}
+		Assert.assertTrue(String.valueOf(type), type == Ball.FIRE || type == Ball.WATER || type == Ball.GRASS || type == Ball.LIGHT || type == Ball.DARK || type == Ball.HEART );
+		switch(type)
+		{
+		case Ball.FIRE:
+			return R.drawable.fire;
+		case Ball.WATER:
+			return R.drawable.water;
+		case Ball.GRASS:
+			return R.drawable.grass;
+		case Ball.LIGHT:
+			return R.drawable.light;
+		case Ball.DARK:
+			return R.drawable.dark;
+		case Ball.HEART:
+			return R.drawable.heart;
+		}
+		return -1;
 	}
-	public void resetAllPress()
-	{
-		for(int i=0;i<kernel.getChestHeight();i++)
-			for(int j=0;j<kernel.getChestWidth();j++)
-			{
-				chestImageView[i][j].setPress(false);
-			}
-	}*/
 	private void createChest()
 	{
 		Display display = getWindowManager().getDefaultDisplay();
@@ -96,27 +92,7 @@ public class MainActivity extends Activity implements OnTouchListener
 				ballParams[i][j] = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 
 				int type = kernel.getTypeByIndex(j, i);
-				switch(type)
-				{
-				case Ball.FIRE:
-					chestImageView[i][j].setImageResource(R.drawable.fire);
-					break;
-				case Ball.WATER:
-					chestImageView[i][j].setImageResource(R.drawable.water);
-					break;
-				case Ball.GRASS:
-					chestImageView[i][j].setImageResource(R.drawable.grass);
-					break;
-				case Ball.LIGHT:
-					chestImageView[i][j].setImageResource(R.drawable.light);
-					break;
-				case Ball.DARK:
-					chestImageView[i][j].setImageResource(R.drawable.dark);
-					break;
-				case Ball.HEART:
-					chestImageView[i][j].setImageResource(R.drawable.heart);
-					break;
-				}
+				chestImageView[i][j].setImageResource(typeRefImage(type));
 				
 				ballParams[i][j].width = screenSize.x/6;
 				ballParams[i][j].height = screenSize.x/6;
@@ -128,6 +104,12 @@ public class MainActivity extends Activity implements OnTouchListener
 		}
 	}
 
+	private void refreshImage(Point target)
+	{
+		Assert.assertTrue(target.toString(), target.x>=0&&target.x<chestDimension.x&&target.y>=0&&target.y<chestDimension.y);
+		int type = kernel.getTypeByIndex(target.x, target.y);
+		chestImageView[target.y][target.x].setImageResource(typeRefImage(type));
+	}
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) 
 	{
@@ -148,7 +130,7 @@ public class MainActivity extends Activity implements OnTouchListener
 		params.setMargins(x-40, y-40, 0, 0);
 		//iv.setPadding(x, y, 0, 0);
 		
-		controlABall = false;
+		boolean touchABall = false;
 		for(int i=0;i<kernel.getChestHeight();i++)
 			for(int j=0;j<kernel.getChestWidth();j++)
 			{
@@ -157,16 +139,39 @@ public class MainActivity extends Activity implements OnTouchListener
 					if(y>chestImageView[i][j].getTop()&&y<chestImageView[i][j].getTop()+chestImageView[i][j].getHeight())
 					{
 						testPrintOut.setText(String.valueOf(j)+" "+String.valueOf(i));
-						controlABall = true;
+						touchABall = true;
 						if(event.getAction() == MotionEvent.ACTION_DOWN)
 						{
-							controlBallId.x = j;
-							controlBallId.y = i;
+							controlBallId.set(j, i);
+							previousBallId.set(j, i);
+							chestImageView[i][j].setImageResource(R.drawable.white);
+							int type = kernel.getTypeByIndex(j, i);
+							roamingBallView.setImageResource(typeRefImage(type));
+							mainView.addView(roamingBallView, params);
+							controlABall = true;
+						}
+						if(event.getAction() == MotionEvent.ACTION_MOVE)
+						{
+							if(i!=previousBallId.y&&j!=previousBallId.x)
+							{
+								kernel.exchange(new Point(j,i), previousBallId);
+								chestImageView[i][j].setImageResource(R.drawable.white);
+								refreshImage(previousBallId);
+								previousBallId.set(j, i);
+							}
 						}
 					}
 			}
-		if(event.getAction() == MotionEvent.ACTION_MOVE)
-			mainView.updateViewLayout(chestImageView[controlBallId.y][controlBallId.x], params);
+		if(event.getAction() == MotionEvent.ACTION_MOVE&&touchABall)
+		{
+			mainView.updateViewLayout(roamingBallView, params);
+		}
+		if(event.getAction() == MotionEvent.ACTION_UP&&controlABall)
+		{
+			controlABall = false;
+			mainView.removeView(roamingBallView);
+			
+		}
 		return true;
 	}
 
