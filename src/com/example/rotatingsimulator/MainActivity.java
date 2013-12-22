@@ -33,6 +33,7 @@ public class MainActivity extends Activity implements OnTouchListener
 	private boolean controlABall;
 	private Point controlBallId;
 	private Point previousBallId;
+	private Point pressedBallId;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
@@ -45,15 +46,26 @@ public class MainActivity extends Activity implements OnTouchListener
 		setContentView(R.layout.activity_main);
 		testPrintOut = (TextView) findViewById(R.id.testPrintOut);
 		mainView = (RelativeLayout)findViewById(R.id.mainView);
+		
+		Display display = getWindowManager().getDefaultDisplay();
+		Point screenSize = new Point();
+		display.getSize(screenSize);
+		
 		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
-		//mainView.addView(iv);
+		params.width = screenSize.x/6;
+		params.height = screenSize.x/6;
+		
 		kernel = new Kernel(chestDimension);
-		mainView.setOnTouchListener(this);
-		testPrintOut.setText("start");
-		createChest();
+		
 		controlBallId = new Point();
 		previousBallId = new Point();
+		pressedBallId = new Point();
 		roamingBallView = new ImageView(this);
+		
+		mainView.setOnTouchListener(this);
+		testPrintOut.setText("start");
+		
+		createChest();
 		
 	}
 	private int typeRefImage(int type)
@@ -140,6 +152,7 @@ public class MainActivity extends Activity implements OnTouchListener
 					{
 						testPrintOut.setText(String.valueOf(j)+" "+String.valueOf(i));
 						touchABall = true;
+						
 						if(event.getAction() == MotionEvent.ACTION_DOWN)
 						{
 							controlBallId.set(j, i);
@@ -152,6 +165,7 @@ public class MainActivity extends Activity implements OnTouchListener
 						}
 						if(event.getAction() == MotionEvent.ACTION_MOVE)
 						{
+							pressedBallId.set(j, i);
 							if(i!=previousBallId.y||j!=previousBallId.x)
 							{
 								kernel.exchange(new Point(j,i), previousBallId);
@@ -169,6 +183,9 @@ public class MainActivity extends Activity implements OnTouchListener
 		if(event.getAction() == MotionEvent.ACTION_UP&&controlABall)
 		{
 			controlABall = false;
+			refreshImage(pressedBallId);
+			/*chestImageView[pressedBallId.y][pressedBallId.x].setImageResource(
+					typeRefImage(kernel.getTypeByIndex(pressedBallId.x, pressedBallId.y)));*/
 			mainView.removeView(roamingBallView);
 			
 		}

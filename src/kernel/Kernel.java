@@ -19,7 +19,19 @@ public class Kernel
 		chest = new Ball[chestHeight][chestWidth];
 		for(int i=0;i<5;i++)
 			for(int j=0;j<6;j++)
-				chest[i][j] = new Ball((int)(Math.random()*6)); 
+			{
+				int type = (int)(Math.random()*6);
+				if(i>0&&j>0)
+					while(type == chest[i-1][j].getType()||type == chest[i][j-1].getType())
+						type = (int)(Math.random()*6);
+				else if(i>0)
+					while(type == chest[i-1][j].getType())
+						type = (int)(Math.random()*6);
+				else if(j>0)
+					while(type == chest[i][j-1].getType())
+						type = (int)(Math.random()*6);
+				chest[i][j] = new Ball(type); 
+			}
 	}
 	public int getTypeByIndex(int x,int y)
 	{
