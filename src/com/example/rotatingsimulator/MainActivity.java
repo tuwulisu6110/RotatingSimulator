@@ -137,7 +137,7 @@ public class MainActivity extends Activity implements OnTouchListener
 		// TODO Auto-generated method stub
 		String s=String.valueOf(event.getX())+" "+String.valueOf(event.getY());
 		//testPrintOut.setText(s);
-		Log.d("mainview",s);
+		//Log.d("mainview",s);
 		int x=(int)event.getX(),y=(int)event.getY();
 		params.setMargins(x-40, y-40, 0, 0);
 		//iv.setPadding(x, y, 0, 0);
@@ -150,7 +150,7 @@ public class MainActivity extends Activity implements OnTouchListener
 				if(x>chestImageView[i][j].getLeft()&&x<chestImageView[i][j].getLeft()+chestImageView[i][j].getWidth())
 					if(y>chestImageView[i][j].getTop()&&y<chestImageView[i][j].getTop()+chestImageView[i][j].getHeight())
 					{
-						testPrintOut.setText(String.valueOf(j)+" "+String.valueOf(i));
+						//testPrintOut.setText(String.valueOf(j)+" "+String.valueOf(i));
 						touchABall = true;
 						
 						if(event.getAction() == MotionEvent.ACTION_DOWN)
@@ -186,6 +186,10 @@ public class MainActivity extends Activity implements OnTouchListener
 			refreshImage(pressedBallId);
 			/*chestImageView[pressedBallId.y][pressedBallId.x].setImageResource(
 					typeRefImage(kernel.getTypeByIndex(pressedBallId.x, pressedBallId.y)));*/
+			if(kernel.breakChain())
+				testPrintOut.setText("HaveChain");
+			else
+				testPrintOut.setText("NoChain");
 			mainView.removeView(roamingBallView);
 			
 		}

@@ -16,9 +16,11 @@ public class Ball
 	public static final int DARK = 4;
 	public static final int HEART = 5;
 	private int type;
+	private boolean state;
 	public Ball(int t)
 	{
 		type = t;
+		state = false;
 	}
 	public void setType(int t)
 	{
@@ -27,6 +29,14 @@ public class Ball
 	public int getType()
 	{
 		return type;
+	}
+	public void setState(boolean s)
+	{
+		state = s;
+	}
+	public boolean getState()
+	{
+		return state;
 	}
 	public void exchange(Ball aite)
 	{
