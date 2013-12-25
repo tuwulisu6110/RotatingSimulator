@@ -14,6 +14,9 @@ import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.animation.Animation;
+import android.view.animation.AnimationSet;
+import android.view.animation.TranslateAnimation;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -29,6 +32,7 @@ public class MainActivity extends Activity implements OnTouchListener
 	private ImageView chestImageView[][];
 	private ImageView roamingBallView;
 	private RelativeLayout.LayoutParams ballParams[][];
+	private AnimationSet animationSet[][];
 	private Point chestDimension;
 	private boolean controlABall;
 	private Point controlBallId;
@@ -64,6 +68,11 @@ public class MainActivity extends Activity implements OnTouchListener
 		
 		mainView.setOnTouchListener(this);
 		testPrintOut.setText("start");
+		
+		animationSet = new AnimationSet[kernel.getChestHeight()][kernel.getChestWidth()];
+		for(int i=0;i<kernel.getChestHeight();i++)
+			for(int j=0;j<kernel.getChestWidth();j++)
+				animationSet[i][j] = new AnimationSet(true);
 		
 		createChest();
 		
@@ -187,7 +196,43 @@ public class MainActivity extends Activity implements OnTouchListener
 			/*chestImageView[pressedBallId.y][pressedBallId.x].setImageResource(
 					typeRefImage(kernel.getTypeByIndex(pressedBallId.x, pressedBallId.y)));*/
 			if(kernel.breakChain())
+			{
 				testPrintOut.setText("HaveChain");
+				int numOfEmpty[] = new int[kernel.getChestWidth()];
+				int dropLen[][] = new int[kernel.getChestHeight()][kernel.getChestWidth()];
+				
+				for(int i=kernel.getChestHeight()-1;i>=0;i--)
+					for(int j=0;j<kernel.getChestWidth();j++)
+					{
+						if(kernel.getStateByIndex(j, i))
+							chestImageView[i][j].setImageResource(R.drawable.white);
+					}
+				
+				for(int i=kernel.getChestHeight()-1;i>=0;i--)
+					for(int j=0;j<kernel.getChestWidth();j++)
+					{
+						if(i==kernel.getChestHeight()-1)
+							numOfEmpty[j] = 0;
+						if(kernel.getStateByIndex(j, i))
+							numOfEmpty[j]++;
+						else
+						{
+							dropLen[i][j] = numOfEmpty[j];
+							TranslateAnimation translateAnimation = new TranslateAnimation(
+									Animation.RELATIVE_TO_PARENT,ballParams[i][j].leftMargin,
+									Animation.RELATIVE_TO_PARENT,ballParams[i][j].topMargin,
+									Animation.RELATIVE_TO_PARENT,ballParams[i-numOfEmpty[j]][j].leftMargin,
+									Animation.RELATIVE_TO_PARENT,ballParams[i-numOfEmpty[j]][j].topMargin);
+							translateAnimation.setDuration(500);
+							animationSet[i][j].addAnimation(translateAnimation);
+							chestImageView[i][j].startAnimation(animationSet[i][j]);
+							//chest[i-numOfEmpty[j]][j].exchange(chest[i][j]);
+						}
+						
+					}
+
+
+			}
 			else
 				testPrintOut.setText("NoChain");
 			mainView.removeView(roamingBallView);

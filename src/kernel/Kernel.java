@@ -39,6 +39,10 @@ public class Kernel
 	{
 		return chest[y][x].getType();
 	}
+	public boolean getStateByIndex(int x,int y)
+	{
+		return chest[y][x].getState();
+	}
 	public int getChestHeight()
 	{
 		return chestHeight;
@@ -156,6 +160,7 @@ public class Kernel
 					Log.d("ChainSize", String.valueOf(chainSize));
 				}
 			}
+
 		return anyChain;
 		
 	}

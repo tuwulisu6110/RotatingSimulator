@@ -43,5 +43,8 @@ public class Ball
 		int buffer = type;
 		type = aite.getType();
 		aite.setType(buffer);
+		boolean bufferb = state;
+		state = aite.getState();
+		aite.setState(bufferb);
 	}
 }
