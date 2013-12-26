@@ -5,8 +5,10 @@ import kernel.Ball;
 import kernel.Kernel;
 import android.R.string;
 import android.os.Bundle;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.text.style.UpdateLayout;
 import android.util.Log;
 import android.view.Display;
@@ -14,6 +16,9 @@ import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
+import android.view.ViewTreeObserver;
+import android.view.ViewTreeObserver.OnGlobalLayoutListener;
+import android.view.Window;
 import android.view.animation.Animation;
 import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
@@ -34,10 +39,13 @@ public class MainActivity extends Activity implements OnTouchListener
 	private RelativeLayout.LayoutParams ballParams[][];
 	private AnimationSet animationSet[][];
 	private Point chestDimension;
+	private Point ballSize;
 	private boolean controlABall;
 	private Point controlBallId;
 	private Point previousBallId;
 	private Point pressedBallId;
+	private int mainViewHeight;
+	private boolean firstRun;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
@@ -45,6 +53,7 @@ public class MainActivity extends Activity implements OnTouchListener
 		
 		//data setting
 		chestDimension = new Point(6,5);
+		
 		//data setting end
 		
 		setContentView(R.layout.activity_main);
@@ -58,6 +67,8 @@ public class MainActivity extends Activity implements OnTouchListener
 		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 		params.width = screenSize.x/6;
 		params.height = screenSize.x/6;
+		
+		ballSize = new Point(screenSize.x/6, screenSize.x/6);
 		
 		kernel = new Kernel(chestDimension);
 		
@@ -74,7 +85,25 @@ public class MainActivity extends Activity implements OnTouchListener
 			for(int j=0;j<kernel.getChestWidth();j++)
 				animationSet[i][j] = new AnimationSet(true);
 		
-		createChest();
+		firstRun = true;
+		
+		final RelativeLayout layout = (RelativeLayout) findViewById(R.id.mainView);
+		final ViewTreeObserver observer= layout.getViewTreeObserver();
+		observer.addOnGlobalLayoutListener(
+		    new ViewTreeObserver.OnGlobalLayoutListener() {
+		        @Override
+		            public void onGlobalLayout() {
+		                //Log.d("Log", "Height: " + layout.getHeight());
+			        	if(firstRun)
+			        	{
+			                mainViewHeight = layout.getHeight();
+			                createChest();
+			                firstRun = false;
+			        	}
+		            }
+		        });
+		
+		
 		
 	}
 	private int typeRefImage(int type)
@@ -117,7 +146,8 @@ public class MainActivity extends Activity implements OnTouchListener
 				
 				ballParams[i][j].width = screenSize.x/6;
 				ballParams[i][j].height = screenSize.x/6;
-				ballParams[i][j].setMargins(ballParams[i][j].width*j, ballParams[i][j].height*i, 0, 0);
+				ballParams[i][j].setMargins(ballParams[i][j].width*j, mainViewHeight-(ballParams[i][j].height*5)+ ballParams[i][j].height*i, 0, 0);
+				//
 				chestImageView[i][j].setLayoutParams(ballParams[i][j]);
 				mainView.addView(chestImageView[i][j]);
 				
@@ -201,12 +231,12 @@ public class MainActivity extends Activity implements OnTouchListener
 				int numOfEmpty[] = new int[kernel.getChestWidth()];
 				int dropLen[][] = new int[kernel.getChestHeight()][kernel.getChestWidth()];
 				
-				for(int i=kernel.getChestHeight()-1;i>=0;i--)
+				/*for(int i=kernel.getChestHeight()-1;i>=0;i--)
 					for(int j=0;j<kernel.getChestWidth();j++)
 					{
 						if(kernel.getStateByIndex(j, i))
 							chestImageView[i][j].setImageResource(R.drawable.white);
-					}
+					}*/
 				
 				for(int i=kernel.getChestHeight()-1;i>=0;i--)
 					for(int j=0;j<kernel.getChestWidth();j++)
@@ -214,19 +244,24 @@ public class MainActivity extends Activity implements OnTouchListener
 						if(i==kernel.getChestHeight()-1)
 							numOfEmpty[j] = 0;
 						if(kernel.getStateByIndex(j, i))
+						{
 							numOfEmpty[j]++;
+							chestImageView[i][j].setVisibility(ImageView.INVISIBLE);
+						}
 						else
 						{
 							dropLen[i][j] = numOfEmpty[j];
 							TranslateAnimation translateAnimation = new TranslateAnimation(
-									Animation.RELATIVE_TO_PARENT,ballParams[i][j].leftMargin,
-									Animation.RELATIVE_TO_PARENT,ballParams[i][j].topMargin,
-									Animation.RELATIVE_TO_PARENT,ballParams[i-numOfEmpty[j]][j].leftMargin,
-									Animation.RELATIVE_TO_PARENT,ballParams[i-numOfEmpty[j]][j].topMargin);
+									Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
+									Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
+									Animation.ABSOLUTE,chestImageView[i][j].getTranslationY(),
+									Animation.ABSOLUTE,chestImageView[i][j].getTranslationY()+ballSize.y*numOfEmpty[j]);
 							translateAnimation.setDuration(500);
 							animationSet[i][j].addAnimation(translateAnimation);
+							animationSet[i][j].setFillAfter(true);
 							chestImageView[i][j].startAnimation(animationSet[i][j]);
 							//chest[i-numOfEmpty[j]][j].exchange(chest[i][j]);
+							
 						}
 						
 					}
@@ -240,5 +275,17 @@ public class MainActivity extends Activity implements OnTouchListener
 		}
 		return true;
 	}
-
+	public int getStatusBarHeight() 
+	{
+	    Rect r = new Rect();
+	    Window w = getWindow();
+	    w.getDecorView().getWindowVisibleDisplayFrame(r);
+	    return r.top;
+	}
+	 
+	public int getTitleBarHeight() 
+	{
+	    int viewTop = getWindow().findViewById(Window.ID_ANDROID_CONTENT).getTop();
+	    return (viewTop - getStatusBarHeight());
+	}
 }
