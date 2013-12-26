@@ -162,7 +162,9 @@ public class Kernel
 			}
 
 		return anyChain;
-		
 	}
-
+	public void generateBall(Point position)
+	{
+		chest[position.y][position.x].setType((int)(Math.random()*6));
+	}
 }

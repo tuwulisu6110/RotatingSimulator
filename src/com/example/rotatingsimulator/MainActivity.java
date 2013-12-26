@@ -20,6 +20,7 @@ import android.view.ViewTreeObserver;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
 import android.view.Window;
 import android.view.animation.Animation;
+import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
 import android.widget.EditText;
@@ -28,7 +29,7 @@ import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
-public class MainActivity extends Activity implements OnTouchListener
+public class MainActivity extends Activity implements OnTouchListener , AnimationListener
 {
 	TextView testPrintOut;
 	RelativeLayout.LayoutParams params;
@@ -46,6 +47,9 @@ public class MainActivity extends Activity implements OnTouchListener
 	private Point pressedBallId;
 	private int mainViewHeight;
 	private boolean firstRun;
+	private int numOfStartedAnimation;
+	private int numOfEndedAnimaion;
+	private int dropMode;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
@@ -106,6 +110,7 @@ public class MainActivity extends Activity implements OnTouchListener
 		
 		
 	}
+	
 	private int typeRefImage(int type)
 	{
 		Assert.assertTrue(String.valueOf(type), type == Ball.FIRE || type == Ball.WATER || type == Ball.GRASS || type == Ball.LIGHT || type == Ball.DARK || type == Ball.HEART );
@@ -126,6 +131,7 @@ public class MainActivity extends Activity implements OnTouchListener
 		}
 		return -1;
 	}
+	
 	private void createChest()
 	{
 		Display display = getWindowManager().getDefaultDisplay();
@@ -160,6 +166,80 @@ public class MainActivity extends Activity implements OnTouchListener
 		Assert.assertTrue(target.toString(), target.x>=0&&target.x<chestDimension.x&&target.y>=0&&target.y<chestDimension.y);
 		int type = kernel.getTypeByIndex(target.x, target.y);
 		chestImageView[target.y][target.x].setImageResource(typeRefImage(type));
+	}
+	private void dropingBallRutine()
+	{
+		int numOfEmpty[] = new int[kernel.getChestWidth()];
+		int startDropPosition[][] = new int[kernel.getChestHeight()][kernel.getChestWidth()];
+		
+		numOfEndedAnimaion = 0;
+		numOfStartedAnimation = 0;
+		dropMode = 1;
+		for(int i=kernel.getChestHeight()-1;i>=0;i--)
+			for(int j=0;j<kernel.getChestWidth();j++)
+			{
+				if(i==kernel.getChestHeight()-1)
+					numOfEmpty[j] = 0;
+				if(kernel.getStateByIndex(j, i))
+				{
+					numOfEmpty[j]++;
+					//chestImageView[i][j].setVisibility(ImageView.INVISIBLE);
+					startDropPosition[i][j] = numOfEmpty[j];
+					kernel.generateBall(new Point(j,i));
+					refreshImage(new Point(j,i));
+				}
+				else if(numOfEmpty[j]!=0)
+				{
+					/*numOfStartedAnimation++;
+					TranslateAnimation translateAnimation = new TranslateAnimation(
+							Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
+							Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
+							Animation.ABSOLUTE,chestImageView[i][j].getTranslationY(),
+							Animation.ABSOLUTE,chestImageView[i][j].getTranslationY()+ballSize.y*numOfEmpty[j]);
+					translateAnimation.setDuration(500);
+					translateAnimation.setAnimationListener(this);
+					animationSet[i][j].addAnimation(translateAnimation);
+					animationSet[i][j].setFillAfter(true);			*/			
+					
+					kernel.exchange(new Point(j,i),new Point(j,i+numOfEmpty[j]));
+				}
+				
+			}
+		for(int i=kernel.getChestHeight()-1;i>=0;i--)
+			for(int j=0;j<kernel.getChestWidth();j++)
+			{
+				//Log.d(String.valueOf(j)+" "+String.valueOf(i),String.valueOf(startDropPosition[i][j]));
+				if(kernel.getStateByIndex(j, i))
+				{
+					//chestImageView[i][j].setVisibility(ImageView.INVISIBLE);
+					numOfStartedAnimation++;
+					TranslateAnimation translateAnimation = new TranslateAnimation(
+							Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
+							Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
+							Animation.ABSOLUTE,chestImageView[i][j].getTranslationY(),//-ballSize.y*(startDropPosition[i][j]),
+							Animation.ABSOLUTE,chestImageView[0][j].getTranslationY()+ballSize.y*(numOfEmpty[j]-startDropPosition[i][j]));
+					translateAnimation.setDuration(3000);
+					translateAnimation.setAnimationListener(this);
+					animationSet[i][j].addAnimation(translateAnimation);
+					animationSet[i][j].setFillAfter(true);
+					animationSet[i][j].setFillBefore(true);
+					chestImageView[i][j].startAnimation(animationSet[i][j]);
+				}
+			}
+		/*for(int i=0;i<kernel.getChestHeight();i++)
+			for(int j=0;j<kernel.getChestWidth();j++)
+				chestImageView[i][j].startAnimation(animationSet[i][j]);*/
+	}
+	private void checkChain()
+	{
+		if(kernel.breakChain())
+		{
+			testPrintOut.setText("HaveChain");
+			dropingBallRutine();
+
+		}
+		else
+			testPrintOut.setText("NoChain");
 	}
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) 
@@ -225,67 +305,36 @@ public class MainActivity extends Activity implements OnTouchListener
 			refreshImage(pressedBallId);
 			/*chestImageView[pressedBallId.y][pressedBallId.x].setImageResource(
 					typeRefImage(kernel.getTypeByIndex(pressedBallId.x, pressedBallId.y)));*/
-			if(kernel.breakChain())
-			{
-				testPrintOut.setText("HaveChain");
-				int numOfEmpty[] = new int[kernel.getChestWidth()];
-				int dropLen[][] = new int[kernel.getChestHeight()][kernel.getChestWidth()];
-				
-				/*for(int i=kernel.getChestHeight()-1;i>=0;i--)
-					for(int j=0;j<kernel.getChestWidth();j++)
-					{
-						if(kernel.getStateByIndex(j, i))
-							chestImageView[i][j].setImageResource(R.drawable.white);
-					}*/
-				
-				for(int i=kernel.getChestHeight()-1;i>=0;i--)
-					for(int j=0;j<kernel.getChestWidth();j++)
-					{
-						if(i==kernel.getChestHeight()-1)
-							numOfEmpty[j] = 0;
-						if(kernel.getStateByIndex(j, i))
-						{
-							numOfEmpty[j]++;
-							chestImageView[i][j].setVisibility(ImageView.INVISIBLE);
-						}
-						else
-						{
-							dropLen[i][j] = numOfEmpty[j];
-							TranslateAnimation translateAnimation = new TranslateAnimation(
-									Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
-									Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
-									Animation.ABSOLUTE,chestImageView[i][j].getTranslationY(),
-									Animation.ABSOLUTE,chestImageView[i][j].getTranslationY()+ballSize.y*numOfEmpty[j]);
-							translateAnimation.setDuration(500);
-							animationSet[i][j].addAnimation(translateAnimation);
-							animationSet[i][j].setFillAfter(true);
-							chestImageView[i][j].startAnimation(animationSet[i][j]);
-							//chest[i-numOfEmpty[j]][j].exchange(chest[i][j]);
-							
-						}
-						
-					}
+			checkChain();
 
-
-			}
-			else
-				testPrintOut.setText("NoChain");
 			mainView.removeView(roamingBallView);
 			
 		}
 		return true;
 	}
-	public int getStatusBarHeight() 
-	{
-	    Rect r = new Rect();
-	    Window w = getWindow();
-	    w.getDecorView().getWindowVisibleDisplayFrame(r);
-	    return r.top;
+
+	@Override
+	public void onAnimationEnd(Animation animation) {
+		// TODO Auto-generated method stub
+
+		numOfEndedAnimaion++;
+		if(numOfEndedAnimaion == numOfStartedAnimation)
+		{
+			//checkChain();
+			
+		}
+
 	}
-	 
-	public int getTitleBarHeight() 
-	{
-	    int viewTop = getWindow().findViewById(Window.ID_ANDROID_CONTENT).getTop();
-	    return (viewTop - getStatusBarHeight());
+
+	@Override
+	public void onAnimationRepeat(Animation animation) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void onAnimationStart(Animation animation) {
+		// TODO Auto-generated method stub
+		
 	}
 }
