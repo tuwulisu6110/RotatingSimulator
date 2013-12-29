@@ -161,6 +161,12 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 		}
 	}
 
+	private void resetImageViewPosition(Point target)
+	{
+		Assert.assertTrue(target.toString(), target.x>=0&&target.x<chestDimension.x&&target.y>=0&&target.y<chestDimension.y);
+		int i = target.y,j = target.x;
+		chestImageView[i][j].setLayoutParams(ballParams[i][j]);
+	}
 	private void refreshImage(Point target)
 	{
 		Assert.assertTrue(target.toString(), target.x>=0&&target.x<chestDimension.x&&target.y>=0&&target.y<chestDimension.y);
@@ -190,17 +196,17 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 				}
 				else if(numOfEmpty[j]!=0)
 				{
-					/*numOfStartedAnimation++;
+					numOfStartedAnimation++;
 					TranslateAnimation translateAnimation = new TranslateAnimation(
-							Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
-							Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
-							Animation.ABSOLUTE,chestImageView[i][j].getTranslationY(),
-							Animation.ABSOLUTE,chestImageView[i][j].getTranslationY()+ballSize.y*numOfEmpty[j]);
-					translateAnimation.setDuration(500);
+							Animation.ABSOLUTE,0,
+							Animation.ABSOLUTE,0,
+							Animation.ABSOLUTE,0,
+							Animation.ABSOLUTE,ballSize.y*numOfEmpty[j]);
+					translateAnimation.setDuration(800);
 					translateAnimation.setAnimationListener(this);
 					animationSet[i][j].addAnimation(translateAnimation);
-					animationSet[i][j].setFillAfter(true);			*/			
-					
+					animationSet[i][j].setFillAfter(true);						
+					chestImageView[i][j].startAnimation(animationSet[i][j]);
 					kernel.exchange(new Point(j,i),new Point(j,i+numOfEmpty[j]));
 				}
 				
@@ -214,15 +220,14 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 					//chestImageView[i][j].setVisibility(ImageView.INVISIBLE);
 					numOfStartedAnimation++;
 					TranslateAnimation translateAnimation = new TranslateAnimation(
-							Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
-							Animation.ABSOLUTE,chestImageView[i][j].getTranslationX(),
-							Animation.ABSOLUTE,chestImageView[i][j].getTranslationY(),//-ballSize.y*(startDropPosition[i][j]),
-							Animation.ABSOLUTE,chestImageView[0][j].getTranslationY()+ballSize.y*(numOfEmpty[j]-startDropPosition[i][j]));
-					translateAnimation.setDuration(3000);
+							Animation.ABSOLUTE,0,
+							Animation.ABSOLUTE,0,
+							Animation.ABSOLUTE,-1*ballSize.y*(i+startDropPosition[i][j]),
+							Animation.ABSOLUTE,-1*ballSize.y*(i+1-(numOfEmpty[j]-startDropPosition[i][j]+1)));
+					translateAnimation.setDuration(800);
 					translateAnimation.setAnimationListener(this);
 					animationSet[i][j].addAnimation(translateAnimation);
 					animationSet[i][j].setFillAfter(true);
-					animationSet[i][j].setFillBefore(true);
 					chestImageView[i][j].startAnimation(animationSet[i][j]);
 				}
 			}
@@ -314,26 +319,37 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 	}
 
 	@Override
-	public void onAnimationEnd(Animation animation) {
+	public void onAnimationEnd(Animation animation) 
+	{
 		// TODO Auto-generated method stub
 
 		numOfEndedAnimaion++;
 		if(numOfEndedAnimaion == numOfStartedAnimation)
 		{
-			//checkChain();
+			Point p = new Point();
+			for(int i=0;i<kernel.getChestHeight();i++)
+				for(int j=0;j<kernel.getChestWidth();j++)
+				{
+					p.set(j, i);
+					resetImageViewPosition(p);
+					refreshImage(p);
+				}
+			checkChain();
 			
 		}
 
 	}
 
 	@Override
-	public void onAnimationRepeat(Animation animation) {
+	public void onAnimationRepeat(Animation animation) 
+	{
 		// TODO Auto-generated method stub
 		
 	}
 
 	@Override
-	public void onAnimationStart(Animation animation) {
+	public void onAnimationStart(Animation animation) 
+	{
 		// TODO Auto-generated method stub
 		
 	}
