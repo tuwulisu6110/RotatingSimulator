@@ -173,6 +173,12 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 		int type = kernel.getTypeByIndex(target.x, target.y);
 		chestImageView[target.y][target.x].setImageResource(typeRefImage(type));
 	}
+	private void resetBallMarginsToDefaultPosition(Point target)
+	{
+		Assert.assertTrue(target.toString(), target.x>=0&&target.x<chestDimension.x&&target.y>=0&&target.y<chestDimension.y);
+		int i = target.y,j = target.x;
+		ballParams[i][j].setMargins(ballParams[i][j].width*j, mainViewHeight-(ballParams[i][j].height*5)+ ballParams[i][j].height*i, 0, 0);
+	}
 	private void dropingBallRutine()
 	{
 		int numOfEmpty[] = new int[kernel.getChestWidth()];
@@ -181,11 +187,15 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 		numOfEndedAnimaion = 0;
 		numOfStartedAnimation = 0;
 		dropMode = 1;
+		for(int j=0;j<kernel.getChestWidth();j++)
+		{
+			numOfEmpty[j] = 0;
+			
+		}
 		for(int i=kernel.getChestHeight()-1;i>=0;i--)
 			for(int j=0;j<kernel.getChestWidth();j++)
 			{
-				if(i==kernel.getChestHeight()-1)
-					numOfEmpty[j] = 0;
+				startDropPosition[i][j] = 0;
 				if(kernel.getStateByIndex(j, i))
 				{
 					numOfEmpty[j]++;
@@ -196,6 +206,7 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 				}
 				else if(numOfEmpty[j]!=0)
 				{
+					animationSet[i][j].reset();
 					numOfStartedAnimation++;
 					TranslateAnimation translateAnimation = new TranslateAnimation(
 							Animation.ABSOLUTE,0,
@@ -205,9 +216,10 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 					translateAnimation.setDuration(800);
 					translateAnimation.setAnimationListener(this);
 					animationSet[i][j].addAnimation(translateAnimation);
-					animationSet[i][j].setFillAfter(true);						
-					chestImageView[i][j].startAnimation(animationSet[i][j]);
-					kernel.exchange(new Point(j,i),new Point(j,i+numOfEmpty[j]));
+					//animationSet[i][j].setFillAfter(true);						
+					chestImageView[i][j].startAnimation(translateAnimation);
+					for(int k=i;k<i+numOfEmpty[j];k++)
+						kernel.exchange(new Point(j,k),new Point(j,k+1));
 				}
 				
 			}
@@ -218,6 +230,7 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 				if(kernel.getStateByIndex(j, i))
 				{
 					//chestImageView[i][j].setVisibility(ImageView.INVISIBLE);
+					
 					numOfStartedAnimation++;
 					TranslateAnimation translateAnimation = new TranslateAnimation(
 							Animation.ABSOLUTE,0,
@@ -227,8 +240,8 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 					translateAnimation.setDuration(800);
 					translateAnimation.setAnimationListener(this);
 					animationSet[i][j].addAnimation(translateAnimation);
-					animationSet[i][j].setFillAfter(true);
-					chestImageView[i][j].startAnimation(animationSet[i][j]);
+					//animationSet[i][j].setFillAfter(true);
+					chestImageView[i][j].startAnimation(translateAnimation);
 				}
 			}
 		/*for(int i=0;i<kernel.getChestHeight();i++)
@@ -331,6 +344,7 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 				for(int j=0;j<kernel.getChestWidth();j++)
 				{
 					p.set(j, i);
+					resetBallMarginsToDefaultPosition(p);
 					resetImageViewPosition(p);
 					refreshImage(p);
 				}
