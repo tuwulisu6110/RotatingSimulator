@@ -1,5 +1,6 @@
 package com.example.rotatingsimulator;
 
+import view.ButtomChest;
 import junit.framework.Assert;
 import kernel.Ball;
 import kernel.Kernel;
@@ -7,6 +8,7 @@ import android.R.string;
 import android.os.Bundle;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.text.style.UpdateLayout;
@@ -29,7 +31,7 @@ import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TextView;
 
-public class MainActivity extends Activity implements OnTouchListener , AnimationListener
+public class MainActivity extends Activity implements OnTouchListener
 {
 	TextView testPrintOut;
 	RelativeLayout.LayoutParams params;
@@ -49,7 +51,7 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 	private boolean firstRun;
 	private int numOfStartedAnimation;
 	private int numOfEndedAnimaion;
-	private int dropMode;
+	private ButtomChest buttomChest;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
@@ -67,6 +69,7 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 		Display display = getWindowManager().getDefaultDisplay();
 		Point screenSize = new Point();
 		display.getSize(screenSize);
+		
 		
 		params = new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT);
 		params.width = screenSize.x/6;
@@ -101,7 +104,8 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 			        	if(firstRun)
 			        	{
 			                mainViewHeight = layout.getHeight();
-			                createChest();
+			                //createChest();
+			        		createChest();
 			                firstRun = false;
 			        	}
 		            }
@@ -134,9 +138,12 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 	
 	private void createChest()
 	{
+		
 		Display display = getWindowManager().getDefaultDisplay();
 		Point screenSize = new Point();
 		display.getSize(screenSize);
+		buttomChest = new ButtomChest(this,kernel,mainView,screenSize,mainViewHeight);
+		/*
 		int h=kernel.getChestHeight(),w=kernel.getChestWidth();
 		chestImageView = new ImageView[h][w];
 		ballParams = new RelativeLayout.LayoutParams[h][w];
@@ -159,8 +166,9 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 				
 			}
 		}
+		*/
 	}
-
+/*
 	private void resetImageViewPosition(Point target)
 	{
 		Assert.assertTrue(target.toString(), target.x>=0&&target.x<chestDimension.x&&target.y>=0&&target.y<chestDimension.y);
@@ -186,7 +194,6 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 		
 		numOfEndedAnimaion = 0;
 		numOfStartedAnimation = 0;
-		dropMode = 1;
 		for(int j=0;j<kernel.getChestWidth();j++)
 		{
 			numOfEmpty[j] = 0;
@@ -199,7 +206,6 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 				if(kernel.getStateByIndex(j, i))
 				{
 					numOfEmpty[j]++;
-					//chestImageView[i][j].setVisibility(ImageView.INVISIBLE);
 					startDropPosition[i][j] = numOfEmpty[j];
 					kernel.generateBall(new Point(j,i));
 					refreshImage(new Point(j,i));
@@ -226,10 +232,8 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 		for(int i=kernel.getChestHeight()-1;i>=0;i--)
 			for(int j=0;j<kernel.getChestWidth();j++)
 			{
-				//Log.d(String.valueOf(j)+" "+String.valueOf(i),String.valueOf(startDropPosition[i][j]));
 				if(kernel.getStateByIndex(j, i))
 				{
-					//chestImageView[i][j].setVisibility(ImageView.INVISIBLE);
 					
 					numOfStartedAnimation++;
 					TranslateAnimation translateAnimation = new TranslateAnimation(
@@ -244,10 +248,8 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 					chestImageView[i][j].startAnimation(translateAnimation);
 				}
 			}
-		/*for(int i=0;i<kernel.getChestHeight();i++)
-			for(int j=0;j<kernel.getChestWidth();j++)
-				chestImageView[i][j].startAnimation(animationSet[i][j]);*/
-	}
+	}*/
+	/*
 	private void checkChain()
 	{
 		if(kernel.breakChain())
@@ -258,7 +260,7 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 		}
 		else
 			testPrintOut.setText("NoChain");
-	}
+	}*/
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) 
 	{
@@ -283,88 +285,55 @@ public class MainActivity extends Activity implements OnTouchListener , Animatio
 		for(int i=0;i<kernel.getChestHeight();i++)
 			for(int j=0;j<kernel.getChestWidth();j++)
 			{
-				//Log.d("pos",String.valueOf(chestImageView[i][j].getHeight()));
-				if(x>chestImageView[i][j].getLeft()&&x<chestImageView[i][j].getLeft()+chestImageView[i][j].getWidth())
-					if(y>chestImageView[i][j].getTop()&&y<chestImageView[i][j].getTop()+chestImageView[i][j].getHeight())
+				if(buttomChest.clickBallCheckout(new Point(j,i), x, y))
+				{
+					touchABall = true;
+					
+					if(event.getAction() == MotionEvent.ACTION_DOWN)
 					{
-						//testPrintOut.setText(String.valueOf(j)+" "+String.valueOf(i));
-						touchABall = true;
-						
-						if(event.getAction() == MotionEvent.ACTION_DOWN)
+						controlBallId.set(j, i);
+						previousBallId.set(j, i);
+						buttomChest.setChestBallImageSource(j, i, -1);
+						buttomChest.setRoamingBallImageSource(kernel.getTypeByIndex(j, i));
+						buttomChest.roamingStart();
+						/*
+						chestImageView[i][j].setImageResource(R.drawable.white);
+						int type = kernel.getTypeByIndex(j, i);
+						roamingBallView.setImageResource(typeRefImage(type));
+						mainView.addView(roamingBallView, params);*/
+						controlABall = true;
+					}
+					if(event.getAction() == MotionEvent.ACTION_MOVE)
+					{
+						pressedBallId.set(j, i);
+						if(i!=previousBallId.y||j!=previousBallId.x)
 						{
-							controlBallId.set(j, i);
+							kernel.exchange(new Point(j,i), previousBallId);
+							buttomChest.setChestBallImageSource(j, i, -1);
+							//chestImageView[i][j].setImageResource(R.drawable.white);
+							buttomChest.refreshImage(previousBallId);
 							previousBallId.set(j, i);
-							chestImageView[i][j].setImageResource(R.drawable.white);
-							int type = kernel.getTypeByIndex(j, i);
-							roamingBallView.setImageResource(typeRefImage(type));
-							mainView.addView(roamingBallView, params);
-							controlABall = true;
-						}
-						if(event.getAction() == MotionEvent.ACTION_MOVE)
-						{
-							pressedBallId.set(j, i);
-							if(i!=previousBallId.y||j!=previousBallId.x)
-							{
-								kernel.exchange(new Point(j,i), previousBallId);
-								chestImageView[i][j].setImageResource(R.drawable.white);
-								refreshImage(previousBallId);
-								previousBallId.set(j, i);
-							}
 						}
 					}
+				}
 			}
 		if(event.getAction() == MotionEvent.ACTION_MOVE&&touchABall)
 		{
-			mainView.updateViewLayout(roamingBallView, params);
+			buttomChest.setRoamingBallParam(params);
+			//mainView.updateViewLayout(roamingBallView, params);
 		}
 		if(event.getAction() == MotionEvent.ACTION_UP&&controlABall)
 		{
 			controlABall = false;
-			refreshImage(pressedBallId);
+			buttomChest.refreshImage(pressedBallId);
 			/*chestImageView[pressedBallId.y][pressedBallId.x].setImageResource(
 					typeRefImage(kernel.getTypeByIndex(pressedBallId.x, pressedBallId.y)));*/
-			checkChain();
+			if(kernel.breakChain())
+				buttomChest.dropingBallRutine();
 
-			mainView.removeView(roamingBallView);
+			buttomChest.roamingEnd();
 			
 		}
 		return true;
-	}
-
-	@Override
-	public void onAnimationEnd(Animation animation) 
-	{
-		// TODO Auto-generated method stub
-
-		numOfEndedAnimaion++;
-		if(numOfEndedAnimaion == numOfStartedAnimation)
-		{
-			Point p = new Point();
-			for(int i=0;i<kernel.getChestHeight();i++)
-				for(int j=0;j<kernel.getChestWidth();j++)
-				{
-					p.set(j, i);
-					resetBallMarginsToDefaultPosition(p);
-					resetImageViewPosition(p);
-					refreshImage(p);
-				}
-			checkChain();
-			
-		}
-
-	}
-
-	@Override
-	public void onAnimationRepeat(Animation animation) 
-	{
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public void onAnimationStart(Animation animation) 
-	{
-		// TODO Auto-generated method stub
-		
 	}
 }
