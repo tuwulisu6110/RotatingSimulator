@@ -1,6 +1,7 @@
 package com.example.rotatingsimulator;
 
 import view.ButtomChest;
+import view.UpperChest;
 import junit.framework.Assert;
 import kernel.Ball;
 import kernel.Kernel;
@@ -46,6 +47,7 @@ public class MainActivity extends Activity implements OnTouchListener
 	private int mainViewHeight;
 	private boolean firstRun;
 	private ButtomChest buttomChest;
+	private UpperChest upperChest;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) 
 	{
@@ -107,7 +109,9 @@ public class MainActivity extends Activity implements OnTouchListener
 		Point screenSize = new Point();
 		display.getSize(screenSize);
 		buttomChest = new ButtomChest(this,kernel,mainView,screenSize,mainViewHeight);
-
+		buttomChest.createChest();
+		upperChest = new UpperChest(this,kernel,mainView,screenSize,mainViewHeight);
+		upperChest.createChest();
 	}
 
 	@Override
@@ -162,11 +166,13 @@ public class MainActivity extends Activity implements OnTouchListener
 		if(event.getAction() == MotionEvent.ACTION_UP&&controlABall)
 		{
 			controlABall = false;
-			buttomChest.refreshImage(pressedBallId);
-			if(kernel.breakChain())
-				buttomChest.dropingBallRutine();
-
+			
 			buttomChest.roamingEnd();
+			buttomChest.refreshImage(pressedBallId);
+			
+			buttomChest.breakChain();
+
+			
 			
 		}
 		return true;

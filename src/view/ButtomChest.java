@@ -17,19 +17,20 @@ import android.widget.RelativeLayout;
 
 public class ButtomChest implements AnimationListener
 {
-	private Point chestDimension;
-	private ImageView chestImageView[][];
-	private RelativeLayout.LayoutParams ballParams[][];
-	private AnimationSet animationSet[][];
-	private RelativeLayout mainView;
-	private Point ballSize;
-	private Point screenSize;
-	private int mainViewHeight;
-	private Kernel kernel;
-	private Context context;
-	private int numOfStartedAnimation;
-	private int numOfEndedAnimaion;
-	private ImageView roamingBallView;
+	protected Point chestDimension;
+	protected ImageView chestImageView[][];
+	protected RelativeLayout.LayoutParams ballParams[][];
+	protected AnimationSet animationSet[][];
+	protected RelativeLayout mainView;
+	protected Point ballSize;
+	protected Point screenSize;
+	protected int mainViewHeight;
+	protected Kernel kernel;
+	protected Context context;
+	protected int numOfStartedAnimation;
+	protected int numOfEndedAnimaion;
+	protected ImageView roamingBallView;
+	protected boolean isChestExist;
 	
 	public ButtomChest(Context c,Kernel k,RelativeLayout mv,Point ss,int h) 
 	{
@@ -46,11 +47,12 @@ public class ButtomChest implements AnimationListener
 			for(int j=0;j<kernel.getChestWidth();j++)
 				animationSet[i][j] = new AnimationSet(true);
 		roamingBallView = new ImageView(context);
-		createChest();
-		
+		isChestExist = false;
 	}
+	
 	public boolean clickBallCheckout(Point id,int x, int y)
 	{
+		Assert.assertTrue(isChestExist);
 		int i = id.y , j = id.x;
 		if(x>chestImageView[i][j].getLeft()&&x<chestImageView[i][j].getLeft()+chestImageView[i][j].getWidth())
 			if(y>chestImageView[i][j].getTop()&&y<chestImageView[i][j].getTop()+chestImageView[i][j].getHeight())
@@ -59,31 +61,49 @@ public class ButtomChest implements AnimationListener
 	}
 	public void roamingStart()
 	{
+		Assert.assertTrue(isChestExist);
 		mainView.addView(roamingBallView);
 	}
 	public void setRoamingBallParam(RelativeLayout.LayoutParams params)
 	{
+		Assert.assertTrue(isChestExist);
 		mainView.updateViewLayout(roamingBallView, params);
 	}
 	public void roamingEnd()
 	{
+		Assert.assertTrue(isChestExist);
 		mainView.removeView(roamingBallView);
 	}
 	public void setChestBallImageSource(int x,int y,int type)
 	{
+		Assert.assertTrue(isChestExist);
 		chestImageView[y][x].setImageResource(typeRefImage(type));
 	}
 	public void setRoamingBallImageSource(int type)
 	{
+		Assert.assertTrue(isChestExist);
 		roamingBallView.setImageResource(typeRefImage(type));
 	}
 	public void refreshImage(Point target)
 	{
+		Assert.assertTrue(isChestExist);
 		Assert.assertTrue(target.toString(), target.x>=0&&target.x<chestDimension.x&&target.y>=0&&target.y<chestDimension.y);
 		int type = kernel.getTypeByIndex(target.x, target.y);
 		chestImageView[target.y][target.x].setImageResource(typeRefImage(type));
 	}
-	private void createChest()
+	
+	public boolean breakChain()
+	{
+		Assert.assertTrue(isChestExist);
+		if(kernel.breakChain())
+		{
+			dropingBallRutine();
+			return true;
+		}
+		return false;
+	}
+	
+	public void createChest()
 	{
 		chestImageView = new ImageView[kernel.getChestHeight()][kernel.getChestWidth()];
 		ballParams = new RelativeLayout.LayoutParams[kernel.getChestHeight()][kernel.getChestWidth()];
@@ -106,21 +126,22 @@ public class ButtomChest implements AnimationListener
 				
 			}
 		}
+		isChestExist = true;
 	}
-	private void resetImageViewPosition(Point target)
+	protected void resetImageViewPosition(Point target)
 	{
 		Assert.assertTrue(target.toString(), target.x>=0&&target.x<chestDimension.x&&target.y>=0&&target.y<chestDimension.y);
 		int i = target.y,j = target.x;
 		chestImageView[i][j].setLayoutParams(ballParams[i][j]);
 	}
-	private void resetBallMarginsToDefaultPosition(Point target)
+	protected void resetBallMarginsToDefaultPosition(Point target)
 	{
 		Assert.assertTrue(target.toString(), target.x>=0&&target.x<chestDimension.x&&target.y>=0&&target.y<chestDimension.y);
 		int i = target.y,j = target.x;
 		ballParams[i][j].setMargins(ballParams[i][j].width*j, mainViewHeight-(ballParams[i][j].height*5)+ ballParams[i][j].height*i, 0, 0);
 	}
 
-	public void dropingBallRutine()
+	protected void dropingBallRutine()
 	{
 		int numOfEmpty[] = new int[kernel.getChestWidth()];
 		int startDropPosition[][] = new int[kernel.getChestHeight()][kernel.getChestWidth()];
@@ -182,7 +203,7 @@ public class ButtomChest implements AnimationListener
 				}
 			}
 	}
-	private int typeRefImage(int type)
+	protected int typeRefImage(int type)
 	{
 		Assert.assertTrue(String.valueOf(type), type == Ball.FIRE || type == Ball.WATER || type == Ball.GRASS || type == Ball.LIGHT || type == Ball.DARK || type == Ball.HEART || type == -1);
 		switch(type)
